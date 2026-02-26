@@ -7,71 +7,73 @@ from app.model_loader import cnn_model, CLASS_LABELS
 logger = logging.getLogger(__name__)
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:
-    """
-    Decodes the uploaded image and applies EXACT MobileNetV2 preprocessing.
-    """
     nparr = np.frombuffer(image_bytes, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
     if image is None:
         raise ValueError("Invalid or corrupted image file.")
         
-    # Resize to expected input size for MobileNetV2 (setup exactly 224x224)
-    image_resized = cv2.resize(image, (224, 224))
+    # OOD Heuristic: Plant Detection via HSV Green Mask
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # Define broad green range in HSV
+    lower_green = np.array([25, 40, 40])
+    upper_green = np.array([85, 255, 255])
     
-    # Convert BGR (OpenCV default) to RGB (Model expectations)
+    mask = cv2.inRange(hsv_image, lower_green, upper_green)
+    green_ratio = cv2.countNonZero(mask) / (image.shape[0] * image.shape[1])
+    
+    # If less than 2% of the image contains green hues, mathematically reject as OOD
+    if green_ratio < 0.02:
+        logger.warning(f"OOD Rejected: Image contains only {green_ratio*100:.1f}% green pixels.")
+        raise ValueError("No plant detected in image.")
+        
+    image_resized = cv2.resize(image, (224, 224))
     image_rgb = cv2.cvtColor(image_resized, cv2.COLOR_BGR2RGB)
     
-    # Preprocess using exact MobileNetV2 built-in function (scaling to [-1, 1])
-    # IMPORTANT: Do not manually divide by 255.
     image_float = np.array(image_rgb, dtype=np.float32)
     image_normalized = tf.keras.applications.mobilenet_v2.preprocess_input(image_float)
-    
-    # Add batch dimension -> (1, 224, 224, 3)
     image_batch = np.expand_dims(image_normalized, axis=0)
     
     return image_batch
 
 async def predict_disease_from_image(image_bytes: bytes) -> dict:
-    """
-    Preprocesses the image, runs it through the real CNN model, and returns a structured prediction.
-    """
     if cnn_model is None:
          raise RuntimeError("ML Model is not loaded on the server.")
          
-    try:
-        processed_image = preprocess_image(image_bytes)
-    except ValueError as e:
-        # Re-raise standard value errors for main.py to catch and return 400
-        raise e
+    processed_image = preprocess_image(image_bytes)
         
-    try:
-        # Inference using the loaded, validated model
-        prediction_probs = cnn_model.predict(processed_image)
-        class_idx = int(np.argmax(prediction_probs[0]))
-        confidence = float(prediction_probs[0][class_idx])
+    prediction_probs = cnn_model.predict(processed_image)
+    
+    # Extract top 3 probabilities
+    probs_array = prediction_probs[0]
+    top_3_indices = np.argsort(probs_array)[-3:][::-1]
+    
+    top_k = []
+    for idx in top_3_indices:
+        lbl = CLASS_LABELS.get(str(idx)) or CLASS_LABELS.get(idx) or f"Unknown_{idx}"
+        top_k.append({
+            "label": lbl.replace("___", " - ").replace("_", " "),
+            "confidence": float(probs_array[idx])
+        })
         
-        # Map prediction index securely to the strictly loaded JSON labels
-        # Handle cases where json keys are either string or ints
-        disease_name = CLASS_LABELS.get(str(class_idx)) or CLASS_LABELS.get(class_idx)
-        
-        if not disease_name:
-             raise RuntimeError(f"Index {class_idx} not found in CLASS_LABELS lookup.")
-             
-        # Parse crop and disease intelligently if format is like "Crop___Disease"
-        parts = disease_name.split("___")
-        if len(parts) == 2:
-            crop = parts[0].replace("_", " ")
-            disease = parts[1].replace("_", " ")
-        else:
-            crop = "Unknown Crop Type"
-            disease = disease_name.replace("_", " ")
+    class_idx = int(top_3_indices[0])
+    confidence = float(probs_array[class_idx])
+    disease_name = CLASS_LABELS.get(str(class_idx)) or CLASS_LABELS.get(class_idx)
+    
+    if not disease_name:
+         raise RuntimeError(f"Index {class_idx} not found in CLASS_LABELS lookup.")
+         
+    parts = disease_name.split("___")
+    if len(parts) == 2:
+        crop = parts[0].replace("_", " ")
+        disease = parts[1].replace("_", " ")
+    else:
+        crop = "Unknown Crop Type"
+        disease = disease_name.replace("_", " ")
 
-        return {
-            "crop": crop,
-            "disease": disease,
-            "confidence": confidence
-        }
-    except Exception as e:
-        logger.error(f"Error during prediction logic: {e}")
-        raise RuntimeError(f"Failed to process image and predict disease: {e}")
+    return {
+        "crop": crop,
+        "disease": disease,
+        "confidence": confidence,
+        "top_k": top_k
+    }
