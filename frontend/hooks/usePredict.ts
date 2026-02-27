@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { analyzePlantImage } from "@/lib/api";
-import { DetectionResponse } from "@/lib/types";
+import { predictDisease } from "@/lib/api";
+import { PredictionResponse } from "@/lib/types";
 
 export function usePredict() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<DetectionResponse | null>(null);
+  const [result, setResult] = useState<PredictionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleImageAnalysis = async (file: File) => {
@@ -12,8 +12,14 @@ export function usePredict() {
       setIsLoading(true);
       setError(null);
       setResult(null);
-      const response = await analyzePlantImage(file);
-      setResult(response);
+
+      const { data, error: apiError } = await predictDisease(file);
+
+      if (apiError) {
+        setError(apiError.message);
+      } else if (data) {
+        setResult(data);
+      }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
     } finally {
@@ -26,5 +32,5 @@ export function usePredict() {
     setError(null);
   };
 
-  return { isLoading, setIsLoading, result, error, handleImageAnalysis, reset };
+  return { isLoading, result, error, handleImageAnalysis, reset };
 }

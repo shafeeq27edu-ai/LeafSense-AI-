@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/layout/Navigation";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-space-mono" });
 
 export const metadata: Metadata = {
-  title: "AgriVision AI",
-  description: "Intelligent Crop Disease Detection",
+  title: "LeafSense AI",
+  description: "Next-Gen Intelligent Crop Disease Detection",
 };
 
 export default function RootLayout({
@@ -17,9 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen pb-12 antialiased selection:bg-[var(--color-primary)]/30`}>
-        <Navbar />
-        {children}
+      <body className={`${inter.variable} ${spaceMono.variable} font-sans min-h-screen pb-12 antialiased selection:bg-[#39ff14]/30 overflow-x-hidden`}>
+        <Navigation />
+        <div className="pt-24 min-h-[calc(100vh-6rem)]">
+          {children}
+        </div>
       </body>
     </html>
   );

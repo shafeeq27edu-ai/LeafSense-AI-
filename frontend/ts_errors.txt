@@ -1,0 +1,11 @@
+﻿.next/dev/types/validator.ts(42,39): error TS2307: Cannot find module '../../../src/app/page.js' or its corresponding type declarations.
+.next/dev/types/validator.ts(57,39): error TS2307: Cannot find module '../../../src/app/layout.js' or its corresponding type declarations.
+components/results/AnalysisCards.tsx(1,28): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.
+components/results/Results.tsx(1,35): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.
+components/results/Results.tsx(48,57): error TS7006: Parameter 'alt' implicitly has an 'any' type.
+components/results/Results.tsx(48,62): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+components/upload/AnalysisCards.tsx(1,28): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.
+components/upload/ConfidenceBars.tsx(4,32): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.
+components/upload/Results.tsx(1,36): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.
+hooks/usePredict.ts(2,35): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+hooks/usePredict.ts(3,35): error TS2307: Cannot find module '@/lib/types' or its corresponding type declarations.

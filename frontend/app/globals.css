@@ -1,22 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0B0F14;
-  --color-card: #111827;
-  --color-border-subtle: #1F2937;
-  --color-primary: #22C55E;
-  --color-primary-accent: #16A34A;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-text-primary: #E5E7EB;
-  --color-text-secondary: #9CA3AF;
-  
+  --color-background: #050a06;
+  --color-card: #09140a;
+  --color-border-subtle: #112a14;
+  --color-primary: #39ff14;
+  /* Neon Green */
+  --color-primary-accent: #2add0e;
+  --color-text-primary: #e0ffd9;
+  --color-text-secondary: #8bc983;
+  --color-dark-green: #0c3b07;
+
   --animate-scan: scan 2s ease-in-out infinite;
 
   @keyframes scan {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(100%); }
-    100% { transform: translateY(0); }
+    0% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(100%);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
   }
 }
 
@@ -24,5 +32,33 @@
   body {
     background-color: var(--color-background);
     color: var(--color-text-primary);
+    font-family: inherit;
+  }
+}
+
+@layer utilities {
+  .pixel-borders {
+    /* 8-bit style border using box-shadows */
+    box-shadow:
+      -2px 0 0 0 var(--color-primary),
+      2px 0 0 0 var(--color-primary),
+      0 -2px 0 0 var(--color-primary),
+      0 2px 0 0 var(--color-primary),
+      -4px 0 0 0 var(--color-dark-green),
+      4px 0 0 0 var(--color-dark-green),
+      0 -4px 0 0 var(--color-dark-green),
+      0 4px 0 0 var(--color-dark-green),
+      -2px -2px 0 0 var(--color-dark-green),
+      2px -2px 0 0 var(--color-dark-green),
+      -2px 2px 0 0 var(--color-dark-green),
+      2px 2px 0 0 var(--color-dark-green);
+    margin: 4px;
+  }
+
+  .glass-panel {
+    background: rgba(9, 20, 10, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(57, 255, 20, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   }
 }
