@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 @theme {
+  --color-background: #0B0F14;
+  --color-card: #111827;
+  --color-border-subtle: #1F2937;
+  --color-primary: #22C55E;
+  --color-primary-accent: #16A34A;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-text-primary: #E5E7EB;
+  --color-text-secondary: #9CA3AF;
+  
   --animate-scan: scan 2s ease-in-out infinite;
 
   @keyframes scan {
@@ -11,14 +21,8 @@
 }
 
 @layer base {
-  :root {
-    --background: #0B1120;
-    --foreground: #f8fafc;
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
   }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }

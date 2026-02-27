@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD:frontend/app/page.tsx
 import UploadCard from "@/components/upload/UploadCard";
 import Results from "@/components/results/Results";
 import ProcessingIndicator from "@/components/upload/ProcessingIndicator";
@@ -21,16 +22,93 @@ export default function Home() {
           <div className="inline-flex items-center justify-center space-x-2 px-4 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-md mb-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-[pulse_2s_ease-in-out_infinite]"></span>
             <span className="text-xs font-mono text-emerald-400 tracking-wider uppercase">agrivision backend online</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-200 to-indigo-400 pb-2">
-            AgriVision AI
-          </h1>
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg md:text-xl font-light">
-            Upload an image of a plant leaf to instantly detect diseases, assess severity,
-            and retrieve expert treatment protocols via our neural network.
-          </p>
-        </div>
+=======
+import { useState } from "react";
+import Hero from "@/components/Hero";
+import UploadCard from "@/components/UploadCard";
+import ProcessingIndicator, { ProcessingStage } from "@/components/ProcessingIndicator";
+import Results from "@/components/Results";
+import ErrorCard from "@/components/ErrorCard";
+import { predictDisease } from "@/lib/api";
+import { PredictionResponse, ErrorResponse } from "@/lib/types";
 
+export default function Home() {
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [stage, setStage] = useState<ProcessingStage>("idle");
+  const [result, setResult] = useState<PredictionResponse | null>(null);
+  const [error, setError] = useState<ErrorResponse | null>(null);
+
+  const handleFileSelect = async (file: File) => {
+    // 1. Pre-validation and reset
+    setResult(null);
+    setError(null);
+    setStage("received");
+
+    // 2. Generate local preview safely
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview(objectUrl);
+
+    // 3. Fake conceptual delays to give UI time to animate beautifully
+    await new Promise((res) => setTimeout(res, 800));
+    setStage("detecting");
+
+    // Let UI chill on detecting while we fire API
+    const reqPromise = predictDisease(file);
+
+    // Switch to generating advice eventually
+    await new Promise((res) => setTimeout(res, 1200));
+    setStage("generating");
+
+    // 4. Await actual result
+    const res = await reqPromise;
+
+    if (res.error) {
+      setError(res.error);
+      setStage("idle");
+    } else if (res.data) {
+      setResult(res.data);
+      setStage("complete");
+    } else {
+      setError({ message: "An unknown error occurred.", code: "UNKNOWN" });
+      setStage("idle");
+    }
+  };
+
+  const handleReset = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    setResult(null);
+    setError(null);
+    setStage("idle");
+  };
+
+  return (
+    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 focus-visible:outline-none">
+      {!imagePreview && !result && !error && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <Hero />
+          <UploadCard onFileSelect={handleFileSelect} disabled={stage !== "idle"} />
+        </div>
+      )}
+
+      {imagePreview && stage !== "idle" && stage !== "complete" && (
+        <div className="mt-8 flex flex-col items-center animate-in fade-in duration-500">
+          <div className="w-full max-w-md mx-auto mb-8 rounded-xl overflow-hidden border border-[var(--color-border-subtle)] shadow-xl relative opacity-60">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imagePreview}
+              alt="Analyzing crop input"
+              className="w-full h-auto object-cover max-h-[300px]"
+            />
+>>>>>>> 68aa341f5feb0b656558cdddb6e0e48b44d5c16e:frontend/src/app/page.tsx
+          </div>
+          <ProcessingIndicator stage={stage} />
+        </div>
+      )}
+
+<<<<<<< HEAD:frontend/app/page.tsx
         <div className="w-full transition-all duration-500 min-h-[400px] flex justify-center items-center flex-col">
           {!isLoading && !result && (
             <div className="w-full animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">
@@ -81,10 +159,47 @@ export default function Home() {
                   <span className="font-semibold tracking-wide">Analyze Another Specimen</span>
                 </button>
               </div>
+=======
+      {error && (
+        <div className="mt-8 flex flex-col items-center animate-in zoom-in-95 duration-300">
+          {imagePreview && (
+            <div className="w-full max-w-sm mx-auto mb-6 rounded-xl overflow-hidden border border-[var(--color-danger)]/50 shadow-xl opacity-80">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="Failed crop analysis"
+                className="w-full h-auto object-cover max-h-48 grayscale"
+              />
+>>>>>>> 68aa341f5feb0b656558cdddb6e0e48b44d5c16e:frontend/src/app/page.tsx
             </div>
           )}
+          <ErrorCard
+            errorTitle={error.code === "RATE_LIMIT" ? "Too Many Requests" : "Analysis Failed"}
+            errorMessage={error.message}
+            onRetry={handleReset}
+          />
         </div>
+<<<<<<< HEAD:frontend/app/page.tsx
       </div>
+=======
+      )}
+
+      {result && stage === "complete" && (
+        <div className="animate-in slide-in-from-bottom-8 duration-700 pb-12">
+          {imagePreview && (
+            <div className="w-full max-w-2xl mx-auto mt-8 mb-6 rounded-xl overflow-hidden border border-[var(--color-border-subtle)] shadow-lg transition-transform hover:scale-[1.01] duration-300">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="Analyzed crop output"
+                className="w-full h-auto object-cover max-h-[400px]"
+              />
+            </div>
+          )}
+          <Results result={result} onReset={handleReset} />
+        </div>
+      )}
+>>>>>>> 68aa341f5feb0b656558cdddb6e0e48b44d5c16e:frontend/src/app/page.tsx
     </main>
   );
 }
