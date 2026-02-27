@@ -19,6 +19,15 @@ ERROR_CODES = {
     "VALIDATION_ERROR": "VALIDATION_ERROR"
 }
 
+def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": "Rate limit exceeded. Try again later.",
+            "code": ERROR_CODES["RATE_LIMITED"]
+        }
+    )
+
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global catch: {exc}")
     

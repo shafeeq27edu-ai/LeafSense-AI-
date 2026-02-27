@@ -110,6 +110,78 @@ export default function Home() {
         </motion.div>
 
       </div>
+
+      {/* Interactive Features Section */}
+      <div className="container mx-auto relative z-10 py-24 px-4 w-full max-w-7xl">
+        <div className="text-center mb-16">
+          <h2 className="text-[#39ff14] font-mono tracking-widest uppercase text-sm mb-4 border-b border-[#39ff14]/30 pb-2 inline-block">Architecture Core</h2>
+          <h3 className="text-3xl md:text-5xl font-bold text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+            Intelligence at the Edge.
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Feature 1 */}
+          <motion.div
+            className="glass-panel p-8 rounded-2xl border border-[#112a14] relative overflow-hidden group hover:border-[#39ff14]/50 hover:bg-[#0c3b07]/20 transition-all duration-300 transform-gpu"
+            whileHover={{ y: -10 }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#39ff14]/10 rounded-bl-full blur-[30px] group-hover:bg-[#39ff14]/20 transition-all duration-500"></div>
+            <div className="w-12 h-12 rounded-xl bg-[#09140a] border border-[#39ff14]/30 flex items-center justify-center mb-6 shadow-[inset_0_0_15px_rgba(57,255,20,0.1)] group-hover:shadow-[inset_0_0_25px_rgba(57,255,20,0.3)] transition-all">
+              <span className="text-2xl drop-shadow-[0_0_5px_#39ff14]">🎯</span>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">AI Disease Detection</h4>
+            <p className="text-[#8bc983] text-sm leading-relaxed">
+              Identify 30+ plant pathogens with sub-second neural inference directly from leaf structural anomalies.
+            </p>
+          </motion.div>
+
+          {/* Feature 2 */}
+          <motion.div
+            className="glass-panel p-8 rounded-2xl border border-[#112a14] relative overflow-hidden group hover:border-[#39ff14]/50 hover:bg-[#0c3b07]/20 transition-all duration-300 transform-gpu"
+            whileHover={{ y: -10 }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#39ff14]/10 rounded-bl-full blur-[30px] group-hover:bg-[#39ff14]/20 transition-all duration-500"></div>
+            <div className="w-12 h-12 rounded-xl bg-[#09140a] border border-[#39ff14]/30 flex items-center justify-center mb-6 shadow-[inset_0_0_15px_rgba(57,255,20,0.1)] group-hover:shadow-[inset_0_0_25px_rgba(57,255,20,0.3)] transition-all">
+              <span className="text-2xl drop-shadow-[0_0_5px_#39ff14]">📸</span>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">Seamless Input</h4>
+            <p className="text-[#8bc983] text-sm leading-relaxed">
+              Drop an image or activate your camera. The vision pipeline normalizes the input instantly.
+            </p>
+          </motion.div>
+
+          {/* Feature 3 */}
+          <motion.div
+            className="glass-panel p-8 rounded-2xl border border-[#112a14] relative overflow-hidden group hover:border-[#39ff14]/50 hover:bg-[#0c3b07]/20 transition-all duration-300 transform-gpu"
+            whileHover={{ y: -10 }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#39ff14]/10 rounded-bl-full blur-[30px] group-hover:bg-[#39ff14]/20 transition-all duration-500"></div>
+            <div className="w-12 h-12 rounded-xl bg-[#09140a] border border-[#39ff14]/30 flex items-center justify-center mb-6 shadow-[inset_0_0_15px_rgba(57,255,20,0.1)] group-hover:shadow-[inset_0_0_25px_rgba(57,255,20,0.3)] transition-all">
+              <span className="text-2xl drop-shadow-[0_0_5px_#39ff14]">📊</span>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">Confidence Output</h4>
+            <p className="text-[#8bc983] text-sm leading-relaxed">
+              Transparent telemetry. View exact severity ratings and probability metrics alongside the diagnosis.
+            </p>
+          </motion.div>
+
+          {/* Feature 4 */}
+          <motion.div
+            className="glass-panel p-8 rounded-2xl border border-[#112a14] relative overflow-hidden group hover:border-[#39ff14]/50 hover:bg-[#0c3b07]/20 transition-all duration-300 transform-gpu"
+            whileHover={{ y: -10 }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[orange]/10 rounded-bl-full blur-[30px] group-hover:bg-[orange]/20 transition-all duration-500"></div>
+            <div className="w-12 h-12 rounded-xl bg-[#09140a] border border-[orange]/30 flex items-center justify-center mb-6 shadow-[inset_0_0_15px_rgba(255,165,0,0.1)] group-hover:shadow-[inset_0_0_25px_rgba(255,165,0,0.3)] transition-all">
+              <span className="text-2xl drop-shadow-[0_0_5px_orange]">⚡</span>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">Fallback Redundancy</h4>
+            <p className="text-[#8bc983] text-sm leading-relaxed">
+              Resilient infrastructure providing 99.9% uptime, even during heavy traffic or adverse network conditions.
+            </p>
+          </motion.div>
+        </div>
+      </div>
     </main>
   );
 }

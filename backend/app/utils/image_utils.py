@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import tensorflow as tf
+# no tf
 from typing import Tuple, Dict, Any
 
 def decode_image(image_bytes: bytes) -> np.ndarray:
@@ -93,5 +93,5 @@ def resize_and_normalize(image: np.ndarray) -> np.ndarray:
     image_resized = cv2.resize(image, (224, 224))
     image_rgb = cv2.cvtColor(image_resized, cv2.COLOR_BGR2RGB)
     image_float = np.array(image_rgb, dtype=np.float32)
-    image_normalized = tf.keras.applications.mobilenet_v2.preprocess_input(image_float)
+    image_normalized = (image_float / 127.5) - 1.0
     return np.expand_dims(image_normalized, axis=0)

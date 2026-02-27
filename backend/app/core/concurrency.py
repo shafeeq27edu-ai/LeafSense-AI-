@@ -2,7 +2,7 @@ import asyncio
 import numpy as np
 from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
-import tensorflow as tf
+# no tf
 from app.core.model_loader import cnn_model, CLASS_LABELS, feature_extractor, class_centroids, TEMPERATURE_CALIBRATION
 from app.core.predictor import preprocess_image
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import UploadCard from "@/components/upload/UploadCard";
 import Results from "@/components/results/Results";
 import ErrorCard from "@/components/shared/ErrorCard";
@@ -35,53 +35,63 @@ export default function FeaturesPage() {
             </motion.div>
 
             <div className="flex flex-col items-center justify-center relative z-10 min-h-[400px]">
-                {isLoading && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full"
-                    >
-                        <LoadingScan message="Initiating deep neural scan..." />
-                    </motion.div>
-                )}
+                <AnimatePresence mode="wait">
+                    {isLoading && (
+                        <motion.div
+                            key="loading"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                            className="w-full"
+                        >
+                            <LoadingScan message="Initiating deep neural scan..." />
+                        </motion.div>
+                    )}
 
-                {error && !isLoading && (
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="w-full"
-                    >
-                        <ErrorCard error={error} onRetry={reset} />
-                    </motion.div>
-                )}
+                    {error && !isLoading && (
+                        <motion.div
+                            key="error"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20, transition: { duration: 0.2 } }}
+                            className="w-full"
+                        >
+                            <ErrorCard error={error} onRetry={reset} />
+                        </motion.div>
+                    )}
 
-                {!isLoading && !result && !error && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="w-full"
-                    >
-                        <UploadCard onImageSelected={(file) => handleImageAnalysis(file)} isLoading={isLoading} />
-                    </motion.div>
-                )}
+                    {!isLoading && !result && !error && (
+                        <motion.div
+                            key="upload"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -30, transition: { duration: 0.2 } }}
+                            className="w-full"
+                        >
+                            <UploadCard onImageSelected={(file) => handleImageAnalysis(file)} isLoading={isLoading} />
+                        </motion.div>
+                    )}
 
-                {result && !isLoading && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full"
-                    >
-                        <Results result={result} />
-                        <div className="mt-12 flex justify-center">
-                            <button
-                                onClick={reset}
-                                className="px-8 py-3 font-mono uppercase tracking-widest text-[#0c3b07] bg-[#39ff14] pixel-borders hover:scale-105 hover:shadow-[0_0_20px_#39ff14] transition-all"
-                            >
-                                SCAN ANOTHER LEAF
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
+                    {result && !isLoading && (
+                        <motion.div
+                            key="result"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                            className="w-full"
+                        >
+                            <Results result={result} />
+                            <div className="mt-12 flex justify-center">
+                                <button
+                                    onClick={reset}
+                                    className="px-8 py-3 font-mono uppercase tracking-widest text-[#0c3b07] bg-[#39ff14] pixel-borders hover:scale-105 hover:shadow-[0_0_20px_#39ff14] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#39ff14] focus-visible:ring-offset-[#050a06]"
+                                >
+                                    SCAN ANOTHER LEAF
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </main>
     );
