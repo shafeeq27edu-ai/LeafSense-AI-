@@ -47,6 +47,14 @@ export default function Navigation() {
 
     return (
         <div onKeyDown={handleKeyDown}>
+            {/* Brand logo - top left */}
+            <div className="fixed top-6 left-6 z-50">
+                <a href="/" className="font-mono font-bold text-lg tracking-[0.15em] uppercase text-[#39ff14] drop-shadow-[0_0_8px_#39ff14] hover:drop-shadow-[0_0_15px_#39ff14] transition-all duration-300">
+                    <span className="text-white">Leaf</span>Sense
+                    <span className="text-[10px] text-[#8bc983] block -mt-1 tracking-[0.25em]">AI</span>
+                </a>
+            </div>
+
             <nav className="fixed top-6 right-6 z-50">
                 <button
                     onClick={() => setIsOpen(!isOpen)}

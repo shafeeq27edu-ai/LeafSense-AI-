@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/")
 async def root():
-    return {"message": "Welcome to AgriVision AI Production"}
+    return {"message": "Welcome to LeafSense AI Production"}
 
 @router.get("/health")
 async def health_check():

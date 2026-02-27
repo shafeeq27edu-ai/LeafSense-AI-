@@ -29,19 +29,32 @@ async def lifespan(app: FastAPI):
     load_model(model_path)
     try:
         model = get_model()
-        if model:
-            t0 = time.time()
-            await run_in_threadpool(model.predict, np.zeros((1,224,224,3), dtype=np.float32))
-            startup_time = round(time.time() - t0, 3)
-            logger.info(f"Warmup done in {startup_time}s")
+        # if model:
+        #     t0 = time.time()
+        #     await run_in_threadpool(model.predict, np.zeros((1,224,224,3), dtype=np.float32))
+        #     startup_time = round(time.time() - t0, 3)
+        #     logger.info(f"Warmup done in {startup_time}s")
     except Exception as e:
-        logger.error(f"Warmup failed: {e}")
+        logger.error(f"Warmup skipped/failed: {e}")
     yield
 
-app = FastAPI(title="LeafSense AI", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="LeafSense_FIX_v1", version="2.0.0", lifespan=lifespan)
 app.state.limiter = limiter
 
-app.add_middleware(CORSMiddleware, allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")], allow_credentials=True, allow_methods=["POST","GET"], allow_headers=["*"])
+# ---- CORS CONFIG ----
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ---------------------
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request, exc):
@@ -51,8 +64,12 @@ async def rate_limit_handler(request, exc):
 async def global_handler(request, exc):
     global requests_failed
     requests_failed += 1
+    import traceback
+    with open("crash_log.txt", "a") as f:
+        f.write(f"\n--- CRASH AT {time.ctime()} ---\n")
+        f.write(traceback.format_exc())
     logger.error(f"Unhandled: {exc}", exc_info=True)
-    return JSONResponse(status_code=500, content={"detail": "Unexpected error occurred.", "code": "INTERNAL_ERROR"})
+    return JSONResponse(status_code=500, content={"detail": str(exc), "code": "INTERNAL_ERROR"})
 
 @app.get("/health")
 async def health():
@@ -68,64 +85,63 @@ async def ready():
     return {"ready": True}
 
 @app.post("/predict")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 async def predict(request: Request, file: UploadFile = File(...)):
     global requests_served, requests_failed
     if file.content_type not in {"image/jpeg","image/png","image/webp","image/jpg"}:
         raise HTTPException(400, detail="Unsupported file type. Use JPEG or PNG.")
-    chunks, total = [], 0
-    async for chunk in file:
-        total += len(chunk)
-        if total > MAX_FILE_SIZE:
-            raise HTTPException(413, detail="File too large. Max 5MB.")
-        chunks.append(chunk)
-    image_bytes = b"".join(chunks)
+    
+    image_bytes = await file.read()
+    if len(image_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(413, detail="File too large. Max 5MB.")
+
     try:
         validation = validate_plant_presence(image_bytes)
-    except Exception:
-        raise HTTPException(422, detail="Image validation failed.")
-    if not validation.is_plant:
-        raise HTTPException(422, detail=validation.rejection_reason, headers={"X-Error-Code": "NOT_A_PLANT"})
-    try:
+        if not validation.is_plant:
+            raise HTTPException(422, detail=validation.rejection_reason, headers={"X-Error-Code": "NOT_A_PLANT"})
+
         await asyncio.wait_for(semaphore.acquire(), timeout=12.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(503, detail="Server busy. Please retry.", headers={"X-Error-Code": "SERVER_BUSY"})
-    try:
-        model = get_model()
-        if not model:
-            raise HTTPException(503, detail="Model not loaded.", headers={"X-Error-Code": "MODEL_ERROR"})
         try:
+            model = get_model()
+            if not model:
+                raise HTTPException(503, detail="Model not loaded.", headers={"X-Error-Code": "MODEL_ERROR"})
+            
             prediction = await run_in_threadpool(predict_image, image_bytes, model)
-        except ValueError as e:
-            raise HTTPException(422, detail=str(e))
-        confidence = prediction["confidence"]
-        top_preds = prediction.get("top_predictions", [])
-        top2_conf = top_preds[1]["confidence"] if len(top_preds) > 1 else 0.0
-        confidence_gap = round(confidence - top2_conf, 4)
-        uncertainty_flag = confidence_gap < 0.20
-        tier = "high" if confidence >= 0.70 else "moderate" if confidence >= 0.45 else "low"
-        is_healthy = "healthy" in prediction.get("disease","").lower()
-        advisory_skipped, advisory_valid, ai_analysis, gemini_called = False, False, None, False
-        if tier == "low":
-            advisory_skipped = True
-        elif is_healthy:
-            advisory_skipped = True
-            ai_analysis = {"advisory_valid": True, "disease_name": "Healthy", "severity": "None", "cause": "No disease detected.", "immediate_action": "No action required.", "treatment_plan": [], "prevention": "Maintain regular care.", "estimated_crop_loss_risk": "Low", "consult_expert": False}
-            advisory_valid = True
-        else:
-            gemini_called = True
-            try:
-                ai_analysis = await analyze_with_gemini(prediction)
-                advisory_valid = ai_analysis.get("advisory_valid", True)
-            except Exception as e:
-                logger.error(f"Gemini failed: {e}")
-                ai_analysis = {"advisory_valid": False, "parse_error": True}
-        severity = ai_analysis.get("severity","Medium") if ai_analysis else "Low"
-        sev_w = {"None":0,"Low":0.3,"Medium":0.5,"High":0.7,"Critical":1.0}.get(severity,0.5)
-        risk_score = round((confidence * 0.7 + sev_w * 0.3) * 100)
-        risk_category = "LOW" if risk_score < 40 else "HIGH" if risk_score >= 70 else "MODERATE"
-        logger.info(f"tier={tier} confidence={confidence:.3f} gemini_called={gemini_called} advisory_valid={advisory_valid}")
-        requests_served += 1
-        return {"crop": prediction["crop"], "diagnosis": prediction["disease"], "confidence": round(confidence, 4), "confidence_gap": confidence_gap, "tier": tier, "uncertainty_flag": uncertainty_flag, "advisory_valid": advisory_valid, "advisory_skipped": advisory_skipped, "risk_score": risk_score, "risk_category": risk_category, "top_predictions": top_preds, "validator_scores": {"green_ratio": validation.green_ratio, "entropy": validation.entropy, "edge_density": validation.edge_density}, "ai_analysis": ai_analysis}
-    finally:
-        semaphore.release()
+            confidence = prediction["confidence"]
+            top_preds = prediction.get("top_predictions", [])
+            top2_conf = top_preds[1]["confidence"] if len(top_preds) > 1 else 0.0
+            confidence_gap = round(confidence - top2_conf, 4)
+            uncertainty_flag = confidence_gap < 0.20
+            tier = "high" if confidence >= 0.70 else "moderate" if confidence >= 0.45 else "low"
+            is_healthy = "healthy" in prediction.get("disease","").lower()
+
+            advisory_skipped, advisory_valid, ai_analysis, gemini_called = False, False, None, False
+            if tier == "low" or is_healthy:
+                advisory_skipped = True
+                if is_healthy:
+                    ai_analysis = {"advisory_valid": True, "disease_name": "Healthy", "severity": "None", "cause": "No disease detected.", "immediate_action": "No action required.", "treatment_plan": [], "prevention": "Maintain regular care.", "estimated_crop_loss_risk": "Low", "consult_expert": False}
+                    advisory_valid = True
+            else:
+                gemini_called = True
+                try:
+                    ai_analysis = await analyze_with_gemini(prediction)
+                    advisory_valid = ai_analysis.get("advisory_valid", True)
+                except Exception as e:
+                    logger.error(f"Gemini failed: {e}")
+                    ai_analysis = {"advisory_valid": False, "parse_error": True}
+
+            severity = ai_analysis.get("severity","Medium") if ai_analysis else "Low"
+            sev_w = {"None":0,"Low":0.3,"Medium":0.5,"High":0.7,"Critical":1.0}.get(severity,0.5)
+            risk_score = round((confidence * 0.7 + sev_w * 0.3) * 100)
+            risk_category = "LOW" if risk_score < 40 else "HIGH" if risk_score >= 70 else "MODERATE"
+
+            logger.info(f"tier={tier} confidence={confidence:.3f} gemini_called={gemini_called} advisory_valid={advisory_valid}")
+            requests_served += 1
+            return {"crop": prediction["crop"], "diagnosis": prediction["disease"], "confidence": round(confidence, 4), "confidence_gap": confidence_gap, "tier": tier, "uncertainty_flag": uncertainty_flag, "advisory_valid": advisory_valid, "advisory_skipped": advisory_skipped, "risk_score": risk_score, "risk_category": risk_category, "top_predictions": top_preds, "validator_scores": {"green_ratio": validation.green_ratio, "entropy": validation.entropy, "edge_density": validation.edge_density}, "ai_analysis": ai_analysis}
+        finally:
+            semaphore.release()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CRITICAL CRASH IN /predict: {e}", exc_info=True)
+        raise HTTPException(500, detail="Internal server error occurred during prediction.")

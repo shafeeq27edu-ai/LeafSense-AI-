@@ -6,4 +6,4 @@ client = TestClient(app)
 def test_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to AgriVision AI Production"}
+    assert response.json() == {"message": "Welcome to LeafSense AI Production"}

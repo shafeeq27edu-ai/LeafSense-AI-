@@ -1,6 +1,6 @@
-# AgriVision AI Deployment Guide
+# LeafSense AI Deployment Guide
 
-This guide details how to deploy your AgriVision AI backend and frontend for production/hackathons.
+This guide details how to deploy your LeafSense AI backend and frontend for production/hackathons.
 
 ## Backend Deployment (Render / Docker)
 
@@ -16,8 +16,8 @@ This guide details how to deploy your AgriVision AI backend and frontend for pro
 
 ### Option 2: Custom VPS (Docker Compose / Native)
 1. Install Docker on your server.
-2. Build the image: `docker build -t agrivision-backend .`
-3. Run the container: `docker run -d -p 8000:8000 --env-file .env agrivision-backend`
+2. Build the image: `docker build -t leafsense-backend .`
+3. Run the container: `docker run -d -p 8000:8000 --env-file .env leafsense-backend`
 
 > **Note on Memory**: The Dockerfile uses `python:3.10-slim` and `tensorflow-cpu` to reduce image size and prevent out-of-memory errors on cheap VPS/Render free tiers. It executes via `gunicorn` with a `uvicorn` worker for handling asynchronous requests safely.
 
