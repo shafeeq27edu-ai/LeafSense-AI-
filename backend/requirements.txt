@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+gunicorn
+python-multipart
+opencv-python-headless
+numpy
+tensorflow-cpu
+Pillow
+google-generativeai
+pydantic
+pydantic-settings
+slowapi
